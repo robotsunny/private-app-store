@@ -1,22 +1,25 @@
+
+
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const bcrypt = require('bcryptjs');
-const memoryStore = require('../utils/memoryStore');
-const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// @route   POST /api/auth/register
-// @desc    Register a new user
-// @access  Public
+// In-memory user storage
+const users = [];
+let nextUserId = 1;
+
+// Register route
 router.post('/register', [
-  body('name').trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
-  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+  body('name').trim().isLength({ min: 2 }),
+  body('email').isEmail(),
+  body('password').isLength({ min: 6 })
 ], async (req, res) => {
   try {
-    // Check for validation errors
+    console.log('Register request:', req.body);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -28,8 +31,8 @@ router.post('/register', [
 
     const { name, email, password } = req.body;
 
-    // Check if user already exists
-    const existingUser = memoryStore.getUserByEmail(email);
+    // Check if user exists
+    const existingUser = users.find(u => u.email === email);
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -42,20 +45,25 @@ router.post('/register', [
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
-    const user = memoryStore.createUser({
+    const user = {
+      id: nextUserId++,
       name,
       email,
       password: hashedPassword,
-      role: 'user'
-    });
+      role: 'user',
+      createdAt: new Date()
+    };
+    users.push(user);
 
-    // Generate JWT token
+    // Generate token
     const token = jwt.sign(
       { userId: user.id },
-      process.env.JWT_SECRET || 'fallback-secret-key',
-      { expiresIn: process.env.JWT_EXPIRE || '30d' }
+      process.env.JWT_SECRET || 'dev-secret-key',
+      { expiresIn: '30d' }
     );
 
+    console.log('User registered successfully:', user.email);
+    
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -77,12 +85,10 @@ router.post('/register', [
   }
 });
 
-// @route   POST /api/auth/login
-// @desc    Login user
-// @access  Public
+// Login route
 router.post('/login', [
-  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
-  body('password').exists().withMessage('Password is required')
+  body('email').isEmail(),
+  body('password').exists()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -97,7 +103,7 @@ router.post('/login', [
     const { email, password } = req.body;
 
     // Find user
-    const user = memoryStore.getUserByEmail(email);
+    const user = users.find(u => u.email === email);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -114,14 +120,11 @@ router.post('/login', [
       });
     }
 
-    // Update last login
-    memoryStore.updateUser(user.id, { lastLogin: new Date() });
-
     // Generate token
     const token = jwt.sign(
       { userId: user.id },
-      process.env.JWT_SECRET || 'fallback-secret-key',
-      { expiresIn: process.env.JWT_EXPIRE || '30d' }
+      process.env.JWT_SECRET || 'dev-secret-key',
+      { expiresIn: '30d' }
     );
 
     res.json({
@@ -145,37 +148,17 @@ router.post('/login', [
   }
 });
 
-// @route   GET /api/auth/me
-// @desc    Get current user
-// @access  Private
-router.get('/me', auth, async (req, res) => {
-  try {
-    const user = memoryStore.getUserById(req.user.userId);
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        lastLogin: user.lastLogin
-      }
-    });
-  } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
-  }
+// Add demo user for immediate testing
+const demoPassword = bcrypt.hashSync('demo123', 12);
+users.push({
+  id: nextUserId++,
+  name: 'Demo User',
+  email: 'demo@example.com',
+  password: demoPassword,
+  role: 'user',
+  createdAt: new Date()
 });
+console.log('Demo user added: demo@example.com / demo123');
 
 module.exports = router;
+

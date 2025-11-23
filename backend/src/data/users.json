@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "name": "Demo User",
+    "email": "demo@example.com",
+    "password": "$2b$12$3WxtLCVlmg8FzOb/i/9Dc.Dk5iDR/PUjfoaOjgwcVTHw9K9yclu6.",
+    "role": "user",
+    "createdAt": "2025-11-23T17:22:50.907Z"
+  },
+  {
+    "id": 2,
+    "name": "test usr",
+    "email": "test3@example.com",
+    "password": "$2b$12$LeacC8uCdACE2wFhU.wQ4u5NbZZoT6sioZMjsaez97NLNk2NwiKPS",
+    "role": "user",
+    "createdAt": "2025-11-23T17:24:02.715Z"
+  },
+  {
+    "id": 3,
+    "name": "test user",
+    "email": "test1@example.com",
+    "password": "$2b$12$6cbhdMEQTpTDDo6wJWFsgevfOe4KUh5VqLb4Ybn/TBuUiNhXtEXXO",
+    "role": "user",
+    "createdAt": "2025-11-23T17:27:53.997Z"
+  },
+  {
+    "id": 4,
+    "name": "new user",
+    "email": "real@example.com",
+    "password": "$2b$12$QeUBXpCnCgR1VW.6g5yHB.8lt8qsO5RcluA1oOeggDc6faZVs7rGO",
+    "role": "user",
+    "createdAt": "2025-11-23T17:48:55.202Z"
+  }
+]
