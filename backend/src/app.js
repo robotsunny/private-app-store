@@ -1,8 +1,10 @@
+
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userStore = require('./utils/userStore');
+const path = require('path');
 const app = express();
 
 console.log('🔧 app.js loaded successfully!');
@@ -14,6 +16,10 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Register route
 app.post('/api/auth/register', async (req, res) => {
@@ -117,11 +123,15 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Other routes
+// API routes
 app.use('/api/apps', require('./routes/apps'));
+app.use('/api/uploads', require('./routes/uploads'));
+
+// Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'API running' });
 });
+
 app.get('/api/test', (req, res) => {
   res.json({ message: 'TEST ROUTE WORKS!' });
 });

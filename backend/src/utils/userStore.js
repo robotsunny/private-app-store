@@ -26,20 +26,35 @@ try {
   console.error('Error loading users:', error);
 }
 
-// Add demo user if not exists
-const demoUser = users.find(u => u.email === 'demo@example.com');
-if (!demoUser) {
-  const demoPassword = bcrypt.hashSync('demo123', 12);
-  users.push({
-    id: nextUserId++,
-    name: 'Demo User',
-    email: 'demo@example.com',
-    password: demoPassword,
-    role: 'user',
-    createdAt: new Date().toISOString()
-  });
-  console.log('Demo user created: demo@example.com / demo123');
-}
+// DELETE EXISTING ADMIN AND DEMO USERS TO RECREATE THEM
+users = users.filter(user => 
+  user.email !== 'admin@example.com' && 
+  user.email !== 'demo@example.com'
+);
+
+// Create fresh admin user
+const adminPassword = bcrypt.hashSync('admin123', 12);
+users.push({
+  id: nextUserId++,
+  name: 'Admin User',
+  email: 'admin@example.com',
+  password: adminPassword,
+  role: 'admin',
+  createdAt: new Date().toISOString()
+});
+console.log('👑 Admin user created: admin@example.com / admin123');
+
+// Create fresh demo user
+const demoPassword = bcrypt.hashSync('demo123', 12);
+users.push({
+  id: nextUserId++,
+  name: 'Demo User',
+  email: 'demo@example.com',
+  password: demoPassword,
+  role: 'user',
+  createdAt: new Date().toISOString()
+});
+console.log('👤 Demo user created: demo@example.com / demo123');
 
 // Save users to file
 function saveUsers() {
@@ -56,6 +71,7 @@ const userStore = {
     const user = {
       id: nextUserId++,
       ...userData,
+      role: 'user', // Default role for new registrations
       createdAt: new Date().toISOString()
     };
     users.push(user);
@@ -73,9 +89,25 @@ const userStore = {
 
   getAllUsers: () => {
     return [...users];
+  },
+
+  // Admin methods
+  isAdmin: (userId) => {
+    const user = users.find(u => u.id === userId);
+    return user && user.role === 'admin';
+  },
+
+  promoteToAdmin: (userId) => {
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      user.role = 'admin';
+      user.updatedAt = new Date().toISOString();
+      saveUsers();
+      return true;
+    }
+    return false;
   }
 };
 
 module.exports = userStore;
-
 

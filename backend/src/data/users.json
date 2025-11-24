@@ -30,5 +30,21 @@
     "password": "$2b$12$QeUBXpCnCgR1VW.6g5yHB.8lt8qsO5RcluA1oOeggDc6faZVs7rGO",
     "role": "user",
     "createdAt": "2025-11-23T17:48:55.202Z"
+  },
+  {
+    "id": 5,
+    "name": "demo user",
+    "email": "demo@examlpe.com",
+    "password": "$2b$12$lNHiWGuZdXcHN5REX6BAu.owSD7WWi10G/tHZk.n7abVB6oWFRT5u",
+    "role": "user",
+    "createdAt": "2025-11-23T18:31:29.515Z"
+  },
+  {
+    "id": 6,
+    "name": "admin user",
+    "email": "admin@example.com",
+    "password": "$2b$12$YlNPUoZTMeoRbbxDJKa0uODQVk1k9VmY6MUG.xLVlvEM3.jKv9ccu",
+    "role": "user",
+    "createdAt": "2025-11-24T17:30:01.365Z"
   }
 ]
