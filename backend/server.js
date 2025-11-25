@@ -5,15 +5,27 @@ require('dotenv').config();
 
 const app = express();
 
-// Security setup - THIS MUST COME FIRST
+// ========================
+// SECURITY MIDDLEWARE STACK
+// ========================
+
+// 1. Core Security (Helmet, Rate Limiting, CORS)
 setupSecurity(app);
 
-// Body parsing middleware
+// ========================
+// APPLICATION MIDDLEWARE
+// ========================
+
+// Body parsing middleware (after security)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ========================
+// HEALTH & SECURITY ENDPOINTS
+// ========================
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -21,7 +33,15 @@ app.get('/health', (req, res) => {
     status: 'OK',
     timestamp: new Date().toISOString(),
     security: 'Enabled',
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    features: {
+      securityHeaders: true,
+      rateLimiting: true,
+      cors: true,
+      auditLogging: false, // Temporarily disabled
+      inputSanitization: false, // Temporarily disabled
+      apkValidation: false // Temporarily disabled
+    }
   });
 });
 
@@ -29,12 +49,21 @@ app.get('/health', (req, res) => {
 app.get('/api/security-test', (req, res) => {
   res.json({
     message: 'Security test endpoint',
-    security: 'All security middleware is active',
-    timestamp: new Date().toISOString()
+    security: 'Core security middleware is active',
+    timestamp: new Date().toISOString(),
+    middleware: [
+      'Helmet.js Security Headers',
+      'Rate Limiting', 
+      'CORS Protection'
+    ]
   });
 });
 
-// Specific endpoints for testing
+// ========================
+// AUTHENTICATION ENDPOINTS
+// ========================
+
+// Auth test endpoint
 app.get('/api/auth/test', (req, res) => {
   res.json({
     message: 'Auth test endpoint',
@@ -42,6 +71,7 @@ app.get('/api/auth/test', (req, res) => {
   });
 });
 
+// Login endpoint
 app.post('/api/auth/login', (req, res) => {
   res.json({
     message: 'Login endpoint - rate limiting active',
@@ -49,12 +79,18 @@ app.post('/api/auth/login', (req, res) => {
   });
 });
 
+// Register endpoint
 app.post('/api/auth/register', (req, res) => {
   res.json({
     message: 'Register endpoint - rate limiting active'
   });
 });
 
+// ========================
+// APPS ENDPOINTS
+// ========================
+
+// Apps test endpoint
 app.get('/api/apps/test', (req, res) => {
   res.json({
     message: 'Apps test endpoint',
@@ -62,55 +98,146 @@ app.get('/api/apps/test', (req, res) => {
   });
 });
 
+// App upload endpoint
 app.post('/api/apps/upload', (req, res) => {
   res.json({
-    message: 'Upload endpoint - rate limiting active'
+    message: 'Upload endpoint - rate limiting active',
+    note: 'APK validation will be implemented next'
   });
 });
 
+// Get app by ID
+app.get('/api/apps/:id', (req, res) => {
+  res.json({
+    message: `App details for ID: ${req.params.id}`,
+    appId: req.params.id,
+    security: 'Input validation coming soon'
+  });
+});
+
+// ========================
+// USERS ENDPOINTS
+// ========================
+
+// Users test endpoint
 app.get('/api/users/test', (req, res) => {
   res.json({
-    message: 'Users test endpoint',
+    message: 'Users test endpoint', 
     security: 'Security middleware active'
   });
 });
 
-// Catch-all handler for undefined routes
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    message: `The route ${req.originalUrl} does not exist.`,
-    availableEndpoints: [
-      'GET  /health',
-      'GET  /api/security-test',
-      'GET  /api/auth/test',
-      'POST /api/auth/login',
-      'POST /api/auth/register',
-      'GET  /api/apps/test',
-      'POST /api/apps/upload',
-      'GET  /api/users/test'
-    ]
+// Get user by ID
+app.get('/api/users/:id', (req, res) => {
+  res.json({
+    message: `User details for ID: ${req.params.id}`,
+    userId: req.params.id
   });
 });
 
+// ========================
+// ADMIN ENDPOINTS
+// ========================
+
+// Admin test endpoint
+app.get('/api/admin/test', (req, res) => {
+  res.json({
+    message: 'Admin endpoint - enhanced security active',
+    security: 'Strict rate limiting applied'
+  });
+});
+
+// ========================
+// ERROR HANDLING
+// ========================
+
+// Error handling for rate limits
+app.use((err, req, res, next) => {
+  if (err.status === 429) {
+    return res.status(429).json({
+      error: 'Rate limit exceeded',
+      message: err.message,
+      retryAfter: err.retryAfter
+    });
+  }
+  next(err);
+});
+
+// 404 handler - SIMPLIFIED without wildcard
+app.use((req, res, next) => {
+  if (!req.route) {
+    return res.status(404).json({
+      error: 'Route not found',
+      message: `The route ${req.method} ${req.originalUrl} does not exist.`,
+      availableEndpoints: [
+        'GET    /health',
+        'GET    /api/security-test', 
+        'GET    /api/auth/test',
+        'POST   /api/auth/login',
+        'POST   /api/auth/register',
+        'GET    /api/apps/test',
+        'POST   /api/apps/upload',
+        'GET    /api/apps/:id',
+        'GET    /api/users/test',
+        'GET    /api/users/:id',
+        'GET    /api/admin/test'
+      ]
+    });
+  }
+  next();
+});
+
+// ========================
+// SERVER STARTUP
+// ========================
+
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🔒 Security middleware enabled`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`✅ Health check: http://localhost:${PORT}/health`);
-  console.log(`🔐 Security test: http://localhost:${PORT}/api/security-test`);
-  console.log(`⚡ Test rate limiting: http://localhost:${PORT}/api/auth/login`);
-  console.log('');
-  console.log(`📋 Available endpoints:`);
-  console.log(`   GET  http://localhost:${PORT}/health`);
-  console.log(`   GET  http://localhost:${PORT}/api/security-test`);
-  console.log(`   GET  http://localhost:${PORT}/api/auth/test`);
-  console.log(`   POST http://localhost:${PORT}/api/auth/login`);
-  console.log(`   POST http://localhost:${PORT}/api/auth/register`);
-  console.log(`   GET  http://localhost:${PORT}/api/apps/test`);
-  console.log(`   POST http://localhost:${PORT}/api/apps/upload`);
-  console.log(`   GET  http://localhost:${PORT}/api/users/test`);
+  console.log(`
+🚀 Private App Store Backend Started
+====================================
+📍 Port: ${PORT}
+🔒 Security: ENABLED
+🌐 Environment: ${process.env.NODE_ENV || 'development'}
+
+🔐 ACTIVE SECURITY FEATURES:
+   ✅ Helmet.js Security Headers
+   ✅ Rate Limiting (Auth: 5/15min, API: 100/15min) 
+   ✅ CORS Protection
+
+🔄 COMING SOON:
+   📝 Audit Logging
+   🛡️ Input Sanitization & Validation
+   🔍 APK File Validation
+
+📋 AVAILABLE ENDPOINTS:
+   Health & Security:
+      GET  /health
+      GET  /api/security-test
+
+   Authentication (Rate Limited):
+      GET  /api/auth/test
+      POST /api/auth/login
+      POST /api/auth/register
+
+   Applications:
+      GET  /api/apps/test
+      POST /api/apps/upload
+      GET  /api/apps/:id
+
+   Users:
+      GET  /api/users/test
+      GET  /api/users/:id
+
+   Admin:
+      GET  /api/admin/test
+
+⚡ QUICK TESTS:
+   Health:    curl http://localhost:${PORT}/health
+   Security:  curl http://localhost:${PORT}/api/security-test
+   Rate Limit: curl -X POST http://localhost:${PORT}/api/auth/login
+  `);
 });
 
 module.exports = app;
