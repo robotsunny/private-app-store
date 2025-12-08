@@ -2,6 +2,26 @@
 
 > **A complete, working private app distribution platform** built with React and Express.js. Perfect for enterprises, internal tools, and secure app distribution. **Chapter 5 Security Implementation: 100% Complete** ✅
 
+## 📚 Get the Complete eBook
+
+**Building Your Own Private App Store: A Practical Guide to Secure Private App Distribution for iOS and Android**
+
+This repository contains **production-ready code examples** from the complete eBook available on Amazon.
+
+### **What the eBook Includes:**
+- **Complete Architecture:** End-to-end private app store design
+- **Security Deep Dive:** OWASP MASVS, zero-trust, compliance (GDPR/SOX)
+- **Production CI/CD:** Terraform, Kubernetes, Fastlane, GitHub Actions
+- **Vendor-Neutral Guidance:** Apple Business Manager, Google Enterprise, MDM integration
+- **Enterprise Patterns:** Blue-green deployments, audit logging, licensing systems
+
+### **🎯 Perfect For:**
+- Mobile DevOps engineers designing deployment pipelines
+- IT administrators managing secure device fleets  
+- Platform teams building internal developer platforms
+- Engineering managers responsible for governance & compliance
+
+**[Get the Complete Guide on Amazon](https://www.amazon.com/dp/B0G3M49DXH)** →
 ## 🚀 Live Demo Project
 
 This repository contains a **fully functional private app store** with enterprise-grade security features implemented from Chapter 5 of the companion eBook.
